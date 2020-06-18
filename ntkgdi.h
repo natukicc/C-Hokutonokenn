@@ -147,6 +147,12 @@ void NtkGDI_PutImageEx(
 	int dwRop
 );
 
+/*
+ *@method: DrawSolidLine
+ *@for   : NtkGDI
+ *@desc  : Draw a solid Line
+ *@return: void
+ */
 void NtkGDI_DrawSolidLine(
 	int xS,
 	int yS,
@@ -186,7 +192,7 @@ void NtkGDI_DrawRectangle(
 	int nRightX,
 	int nRightY,
 	int color
-	);
+);
 
 /*===Function Definition===*/
 void NtkGDI_SetWindowsSize(int x, int y, int width, int height)

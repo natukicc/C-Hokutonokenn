@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <windows.h>
+#include <time.h>
+#include <math.h>
 #include "ntkgdi.h"
 #include "story.h"
 #include "game.h"
