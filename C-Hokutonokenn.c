@@ -13,7 +13,6 @@ int main()
 	GameInit();
 	//StoryEntry();
 	GameEntry();
-	//NtkGDI_PutImageEx(&fig, left, 350, 51*2, 94*2, iFig*49, 0, 49, 105, false, RGB(255,0,255), SRCCOPY);
 	GameUninit();
 	NtkGDI_uninit();
 	getchar();

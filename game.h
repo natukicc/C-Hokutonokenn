@@ -23,7 +23,8 @@ enum _GamePlayerStat
 	GAME_PLAYER_STAT_JUMPUP,
 	GAME_PLAYER_STAT_JUMPDOWN,
 	GAME_PLAYER_STAT_PUNCH,
-	GAME_PLAYER_STAT_KICK
+	GAME_PLAYER_STAT_KICK,
+	GAME_PLAYER_STAT_BEHIT
 };
 
 #define GAME_CREEP_NUM 4
@@ -36,7 +37,7 @@ enum _GameCreepStat
 {
 	GAME_CREEP_STAT_WALK,
 	GAME_CREEP_STAT_ATTACK,
-	GAME_CREEP_STAT_BACK
+	GAME_CREEP_STAT_BACKUP
 };
 
 /*===Structure Definition===*/
@@ -90,6 +91,7 @@ void GameDrawPlayerStatCrouchGuard(BOOL isReset);
 void GameDrawPlayerPunch();
 void GameDrawPlayerJump();
 void GameDrawPlayerKick();
+void GameDrawPlayerStatBeHit(BOOL isReset);
 /*===Function Definition===*/
 void GameInit()
 {
@@ -135,7 +137,7 @@ void GameEntry()
 		GameDrawCreep();
 		
 		NtkGDI_update();
-		Sleep(100);
+		Sleep(80);
 	}
 }
 
@@ -143,7 +145,7 @@ void GamePlayerStatListener()
 {
 	const double g = 9.8;
 	//Stat listener
-	if(Game_Global_Player.stat == GAME_PLAYER_STAT_MOVE || Game_Global_Player.stat == GAME_PLAYER_STAT_BACK || Game_Global_Player.stat ==  GAME_PLAYER_STAT_CORUCH_DEFENCE || Game_Global_Player.stat ==  GAME_PLAYER_STAT_PUNCH || Game_Global_Player.stat == GAME_PLAYER_STAT_KICK)
+	if(Game_Global_Player.stat == GAME_PLAYER_STAT_MOVE || Game_Global_Player.stat == GAME_PLAYER_STAT_BACK || Game_Global_Player.stat ==  GAME_PLAYER_STAT_CORUCH_DEFENCE || Game_Global_Player.stat ==  GAME_PLAYER_STAT_PUNCH || Game_Global_Player.stat == GAME_PLAYER_STAT_KICK || Game_Global_Player.stat == GAME_PLAYER_STAT_BEHIT)
 	{
 		Game_Global_Player.stat = GAME_PLAYER_STAT_STAND;
 	}
@@ -170,6 +172,7 @@ void GamePlayerStatListener()
 }
 void GameKeyListener()
 {
+	int i;
 	//Key listener
 	if(GetAsyncKeyState(0x57) & 0x8000) //W
 	{
@@ -218,14 +221,40 @@ void GameKeyListener()
 		{
 			Game_Global_Player.stat = GAME_PLAYER_STAT_PUNCH;
 			Game_Global_Player.x += 1;
+			for(i = 0; i<GAME_CREEP_NUM; i++)
+			{
+				if(Game_Global_CreepArr[i].HP <= 0)
+				{
+					continue;
+				}
+				if(fabs(Game_Global_Player.x - Game_Global_CreepArr[i].x) <= 150)
+				{
+					Game_Global_CreepArr[i].xSpeed = 25;
+					Game_Global_CreepArr[i].ySpeed = 30;
+					Game_Global_CreepArr[i].stat = GAME_CREEP_STAT_BACKUP;
+				}
+			}
 		}
 	}
-	if(GetAsyncKeyState(0x4B) & 0x8000) //J
+	if(GetAsyncKeyState(0x4B) & 0x8000) //K
 	{
 		if(Game_Global_Player.stat != GAME_PLAYER_STAT_JUMPUP && Game_Global_Player.stat != GAME_PLAYER_STAT_JUMPDOWN)
 		{
 			Game_Global_Player.stat = GAME_PLAYER_STAT_KICK;
 			Game_Global_Player.x += 1;
+			for(i = 0; i<GAME_CREEP_NUM; i++)
+			{
+				if(Game_Global_CreepArr[i].HP <= 0)
+				{
+					continue;
+				}
+				if(fabs(Game_Global_Player.x - Game_Global_CreepArr[i].x) <= 150)
+				{
+					Game_Global_CreepArr[i].xSpeed = 25;
+					Game_Global_CreepArr[i].ySpeed = 30;
+					Game_Global_CreepArr[i].stat = GAME_CREEP_STAT_BACKUP;
+				}
+			}
 		}
 	}
 }
@@ -263,6 +292,7 @@ void GameCreepStatListener()
 		{
 			continue;
 		}
+		//Walk status
 		if(Game_Global_CreepArr[i].isAlert == FALSE)
 		{
 			if(Game_Global_CreepArr[i].direction == GAME_OBJECT_DIRECTION_LEFT)
@@ -285,6 +315,70 @@ void GameCreepStatListener()
 				{
 					Game_Global_CreepArr[i].direction = GAME_OBJECT_DIRECTION_LEFT;
 					Game_Global_CreepArr[i].walkDistance = GAME_CREEP_WALK_DISTANCE;
+				}
+			}
+			if(fabs(Game_Global_Player.x - Game_Global_CreepArr[i].x) <= 170)
+			{
+				Game_Global_CreepArr[i].isAlert = TRUE;
+			}
+		}
+		//Alert status
+		else
+		{
+			//is fllow player
+			if(Game_Global_CreepArr[i].stat == GAME_CREEP_STAT_WALK)
+			{
+				if(Game_Global_CreepArr[i].x >= Game_Global_Player.x)
+				{
+					Game_Global_CreepArr[i].direction = GAME_OBJECT_DIRECTION_LEFT;
+				}
+				else
+				{
+					Game_Global_CreepArr[i].direction = GAME_OBJECT_DIRECTION_RIGHT;
+				}
+				if(fabs(Game_Global_Player.x - Game_Global_CreepArr[i].x) >= 80)
+				{
+					if(Game_Global_CreepArr[i].direction == GAME_OBJECT_DIRECTION_LEFT)
+					{
+						Game_Global_CreepArr[i].x -= 4;
+					}
+					else if(Game_Global_CreepArr[i].direction == GAME_OBJECT_DIRECTION_RIGHT)
+					{
+						Game_Global_CreepArr[i].x += 4;
+					}
+				}
+				else
+				{
+					if(Game_Global_Player.stat != GAME_PLAYER_STAT_JUMPUP && Game_Global_Player.stat != GAME_PLAYER_STAT_JUMPDOWN && Game_Global_Player.stat != GAME_PLAYER_STAT_CORUCH_DEFENCE)
+					{
+						Game_Global_Player.stat = GAME_PLAYER_STAT_BEHIT;
+					}
+				}
+			}
+			//is be hit back and up
+			else if(Game_Global_CreepArr[i].stat == GAME_CREEP_STAT_BACKUP)
+			{
+				if(Game_Global_Player.direction == GAME_OBJECT_DIRECTION_RIGHT)
+				{
+					Game_Global_CreepArr[i].x += Game_Global_CreepArr[i].xSpeed;
+				}
+				else if(Game_Global_Player.direction == GAME_OBJECT_DIRECTION_LEFT)
+				{
+					Game_Global_CreepArr[i].x -= Game_Global_CreepArr[i].xSpeed;
+				}
+				Game_Global_CreepArr[i].y -= Game_Global_CreepArr[i].ySpeed;
+				Game_Global_CreepArr[i].xSpeed -= af;
+				if(Game_Global_CreepArr[i].xSpeed <= 3)
+				{
+					Game_Global_CreepArr[i].xSpeed = 3;
+				}
+				Game_Global_CreepArr[i].ySpeed -= g;
+				if(Game_Global_CreepArr[i].y >= GAME_FLOOR_Y + 18)
+				{
+					Game_Global_CreepArr[i].y = GAME_FLOOR_Y + 18;
+					Game_Global_CreepArr[i].stat = GAME_CREEP_STAT_WALK;
+					Game_Global_CreepArr[i].xSpeed -= 0;
+					Game_Global_CreepArr[i].ySpeed -= 0;
 				}
 			}
 		}
@@ -310,7 +404,7 @@ void GameDrawCreep()
 }
 void GameDrawCreepOctopus(int index)
 {
-	const double GAME_CREEP_ZOOM = 1.8;
+	const double GAME_CREEP_ZOOM = 2;
 	const int MOVE_MAX_STAT = 5;
 	const int MOVE_IMG_OFFSET_X = 50, MOVE_IMG_OFFSET_Y = 46;
 	static BOOL isFirstEntry = TRUE;
@@ -385,6 +479,16 @@ void GameDrawPlayer()
 		break;
 	case GAME_PLAYER_STAT_KICK:
 		GameDrawPlayerKick();
+		break;
+	case GAME_PLAYER_STAT_BEHIT:
+		if(lastAction != GAME_PLAYER_STAT_BEHIT)
+		{
+			GameDrawPlayerStatBeHit(TRUE);
+		}
+		else
+		{
+			GameDrawPlayerStatBeHit(FALSE);
+		}
 		break;
 	}
 	lastAction = Game_Global_Player.stat;
@@ -660,6 +764,35 @@ void GameDrawPlayerKick()
 			coverStat = 0;
 		}
 		moveStat = 0;
+	}
+}
+void GameDrawPlayerStatBeHit(BOOL isReset)
+{
+	const double GAME_PLAYER_ZOOM = 2.2;
+	const int BEHIT_MAX_STAT = 4;
+	const int BEHIT_IMG_OFFSET_X = 22, BEHIT_IMG_OFFSET_Y = 32;
+	static BOOL isFirstEntry = TRUE;
+	static int behitStat = 0;
+	static NImage imgPlayer;
+	if(isFirstEntry)
+	{
+		isFirstEntry = FALSE;
+		behitStat = 0;
+		NtkGDI_LoadImage(&imgPlayer, "images/figure/main/BeHit.bmp", 0, 0);
+	}
+	if(isReset)
+	{
+		behitStat = 0;
+	}
+	NtkGDI_PutImageEx(
+		&imgPlayer, 
+		Game_Global_Player.x - (int)(BEHIT_IMG_OFFSET_X*GAME_PLAYER_ZOOM), Game_Global_Player.y - (int)(BEHIT_IMG_OFFSET_Y*GAME_PLAYER_ZOOM), (int)(64*GAME_PLAYER_ZOOM), (int)(imgPlayer.height*GAME_PLAYER_ZOOM),
+		behitStat*64, 0, 64, imgPlayer.height,
+		FALSE, RGB(255,0,255), SRCCOPY
+	);
+	if(behitStat < BEHIT_MAX_STAT)
+	{
+		behitStat++;
 	}
 }
 #endif
