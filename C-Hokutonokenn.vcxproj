@@ -73,6 +73,7 @@
   <ItemGroup>
     <ClInclude Include="game.h" />
     <ClInclude Include="ntkgdi.h" />
+    <ClInclude Include="sound.h" />
     <ClInclude Include="story.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
