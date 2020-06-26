@@ -14,7 +14,7 @@ int main()
 	NtkGDI_SetWindowsSize(20,20,1134,650);
 	bkmusic();
 	GameInit();
-	//StoryEntry();
+	StoryEntry();
 	GameEntry();
 	GameUninit();
 	NtkGDI_uninit();

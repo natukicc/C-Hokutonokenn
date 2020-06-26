@@ -135,7 +135,7 @@ void GameInit()
 	Game_Global_Player.direction = GAME_OBJECT_DIRECTION_RIGHT;
 	Game_Global_Player.stat = GAME_PLAYER_STAT_STAND;
 	//Creep
-	Game_Global_isCreepEmpty = TRUE;
+	Game_Global_isCreepEmpty = FALSE;
 	srand((unsigned)time(NULL));
 	for(i = 0; i < GAME_CREEP_NUM; i++)
 	{
